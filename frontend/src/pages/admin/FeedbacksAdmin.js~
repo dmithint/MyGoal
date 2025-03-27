@@ -1,0 +1,136 @@
+import React, { useEffect, useState } from "react";
+import { request } from "../../axios_helper";
+import {
+    Box,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Typography,
+    CircularProgress,
+    IconButton
+} from "@mui/material";
+import { useAuth } from "../../context/AuthProvider";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { ClearIcon } from "@mui/x-date-pickers";
+
+export default function FeedbacksAdmin() {
+    const { user, logout } = useAuth();
+    const [feedbacks, setFeedbacks] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!user || !user.roles.includes("ADMIN")) {
+            navigate("/");
+            return;
+        }
+
+        const fetchFeedbacks = async () => {
+            try {
+                const response = await request("GET", "/trainings/feedbacks");
+                setFeedbacks(response.data);
+                setLoading(false);
+            } catch (error) {
+                console.error("Ошибка при загрузке отзывов:", error);
+                toast.error("Ошибка загрузки данных");
+                logout();
+            }
+        };
+
+        fetchFeedbacks();
+    }, [user, navigate, logout]);
+
+    const handleDeleteFeedback = async (feedbackId) => {
+        const toastId = toast.loading("Удаление отзыва...");
+        try {
+            await request("DELETE", `/trainings/feedbacks/${feedbackId}`);
+            setFeedbacks(feedbacks.filter(feedback => feedback.id !== feedbackId));
+            toast.success("Отзыв успешно удален", { id: toastId });
+        } catch (error) {
+            console.error("Ошибка при удалении:", error);
+            toast.error("Ошибка при удалении отзыва", { id: toastId });
+        }
+    };
+
+    if (loading) {
+        return (
+            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+                <CircularProgress size={60} />
+            </Box>
+        );
+    }
+
+    return (
+        <Box sx={{
+            minHeight: "90vh",
+            padding: "2rem",
+            background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
+        }}>
+            <Typography
+                variant="h4"
+                sx={{
+                    mb: 4,
+                    textAlign: "center",
+                    color: "#2c3e50",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "1px"
+                }}
+            >
+                Управление отзывами о тренировках
+            </Typography>
+
+            <TableContainer
+                component={Paper}
+                sx={{
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                    overflow: "hidden"
+                }}
+            >
+                <Table>
+                    <TableHead>
+                        <TableRow sx={{ backgroundColor: "#9b59b6" }}>
+                            <TableCell sx={{ color: "white", fontWeight: 600 }}>Тренировка</TableCell>
+                            <TableCell sx={{ color: "white", fontWeight: 600 }}>Спортсмен</TableCell>
+                            <TableCell sx={{ color: "white", fontWeight: 600 }}>Оценка</TableCell>
+                            <TableCell sx={{ color: "white", fontWeight: 600 }}>Комментарий</TableCell>
+                            <TableCell sx={{ color: "white", fontWeight: 600 }}>Действия</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {feedbacks.map((feedback) => (
+                            <TableRow
+                                key={feedback.id}
+                                sx={{
+                                    '&:hover': {
+                                        backgroundColor: "#f8f9fa",
+                                        transition: "background-color 0.2s"
+                                    }
+                                }}
+                            >
+                                <TableCell>{feedback.training?.name}</TableCell>
+                                <TableCell>{feedback.athlete?.firstName} {feedback.athlete?.lastName}</TableCell>
+                                <TableCell>{feedback.rating}</TableCell>
+                                <TableCell>{feedback.comment || '-'}</TableCell>
+                                <TableCell>
+                                    <IconButton
+                                        color="error"
+                                        onClick={() => handleDeleteFeedback(feedback.id)}
+                                    >
+                                        <ClearIcon />
+                                    </IconButton>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Box>
+    );
+}

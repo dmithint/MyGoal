@@ -32,7 +32,7 @@ function TimeSlots({timeSlots, setTimeSlots}) {
             acc[coachKey] = [];
         }
         // if (timeslot.status === 'not started') {
-            acc[coachKey].push(timeslot);
+        acc[coachKey].push(timeslot);
         // }
         return acc;
     }, {});
@@ -181,7 +181,7 @@ const PersonalTraining = () => {
             </LocalizationProvider>
         </div>
     ) : (
-        <></>
+        <div style={{height: '70vh'}}></div>
     );
 };
 

@@ -1,0 +1,112 @@
+import React, {useState} from "react";
+import PropTypes from "prop-types";
+import {
+    Box,
+    Button,
+    Paper,
+    Tab,
+    Tabs,
+    TextField,
+    Radio,
+    RadioGroup,
+    FormControlLabel,
+    FormControl,
+    FormLabel
+} from "@mui/material";
+
+
+import { useState } from "react";
+import PropTypes from "prop-types";
+import {
+    Box,
+    Button,
+    Paper,
+    Tab,
+    Tabs,
+    TextField,
+    FormControl,
+    FormLabel,
+    RadioGroup,
+    FormControlLabel,
+    Radio
+} from "@mui/material";
+
+const LoginForm = ({ onLogin, onRegister }) => {
+    const [activeTab, setActiveTab] = useState(0);
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        role: "ATHLETE",
+    });
+
+    const onChangeHandler = (event) => {
+        const { name, value } = event.target;
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            [name]: value,
+        }));
+    };
+
+    const onSubmitLogin = (e) => {
+        e.preventDefault();
+        onLogin(formData.email, formData.password);
+    };
+
+    const onSubmitRegister = (e) => {
+        e.preventDefault();
+        onRegister(
+            formData.firstName,
+            formData.lastName,
+            formData.email,
+            formData.password,
+            [formData.role]
+        );
+    };
+
+    return (
+        <Box display="flex" justifyContent="center" mt={"3%"}>
+            <Paper elevation={3} style={{ padding: "20px", width: "400px" }}>
+                <Tabs value={activeTab} onChange={(event, newValue) => setActiveTab(newValue)} centered>
+                    <Tab label="Авторизация" />
+                    <Tab label="Регистрация" />
+                </Tabs>
+
+                {activeTab === 0 && (
+                    <form onSubmit={onSubmitLogin}>
+                        <TextField label="Email" name="email" fullWidth margin="normal" variant="outlined" onChange={onChangeHandler} value={formData.email} />
+                        <TextField label="Пароль" name="password" type="password" fullWidth margin="normal" variant="outlined" onChange={onChangeHandler} value={formData.password} />
+                        <Button type="submit" variant="contained" color="primary" fullWidth>Войти</Button>
+                    </form>
+                )}
+
+                {activeTab === 1 && (
+                    <form onSubmit={onSubmitRegister}>
+                        <TextField label="Имя" name="firstName" fullWidth margin="normal" variant="outlined" onChange={onChangeHandler} value={formData.firstName} />
+                        <TextField label="Фамилия" name="lastName" fullWidth margin="normal" variant="outlined" onChange={onChangeHandler} value={formData.lastName} />
+                        <TextField label="Email" name="email" fullWidth margin="normal" variant="outlined" onChange={onChangeHandler} value={formData.email} />
+                        <TextField label="Пароль" name="password" type="password" fullWidth margin="normal" variant="outlined" onChange={onChangeHandler} value={formData.password} />
+
+                        <FormControl component="fieldset" style={{ marginTop: "16px" }}>
+                            <FormLabel component="legend">Выберите роль</FormLabel>
+                            <RadioGroup row name="role" value={formData.role} onChange={onChangeHandler}>
+                                <FormControlLabel value="ATHLETE" control={<Radio />} label="Спортсмен" />
+                                <FormControlLabel value="COACH" control={<Radio />} label="Тренер" />
+                            </RadioGroup>
+                        </FormControl>
+
+                        <Button type="submit" variant="contained" color="primary" fullWidth style={{ marginTop: "16px" }}>Зарегистрироваться</Button>
+                    </form>
+                )}
+            </Paper>
+        </Box>
+    );
+};
+
+LoginForm.propTypes = {
+    onLogin: PropTypes.func.isRequired,
+    onRegister: PropTypes.func.isRequired,
+};
+
+export default LoginForm;

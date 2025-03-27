@@ -1,7 +1,7 @@
 import React from "react";
 import {BrowserRouter as Router, Routes, Route} from "react-router-dom";
 import Header from "./components/Header";
-import Footer from "./components/Footer";
+// import Footer from "./components/Footer";
 import UserContent from "./pages/UserContent";
 import VisitHistory from "./pages/VisitHistory";
 import Coaches from "./pages/Coaches";
@@ -34,7 +34,7 @@ function App() {
                                     <Route path="/admin/trainings" element={<TrainingsAdmin/>}/>
                                 </Routes>
                             </main>
-                            <Footer/>
+                            {/*<Footer/>*/}
                         </div>
                     </Router>
                 </main>

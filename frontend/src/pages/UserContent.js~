@@ -1,0 +1,53 @@
+import {useAuth} from "../context/AuthProvider";
+import {useNavigate} from "react-router-dom";
+import {toast} from "react-hot-toast";
+import Cookies from "js-cookie";
+import {request} from "../axios_helper";
+import LoginForm from "../components/LoginForm";
+import UserProfile from "../components/UserProfile";
+
+const UserContent = () => {
+    const {user, login, logout} = useAuth();
+    const navigate = useNavigate();
+
+    const onLogin = async (email, password) => {
+        const toastId = toast.loading("Авторизация...");
+        try {
+            const response = await request("POST", "login", {email, password});
+            const token = response.data.token;
+            Cookies.set("token", token, {expires: 7});
+            login(token);
+            navigate("/profile");
+            toast.success("Авторизация успешна!", {id: toastId});
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Ошибка входа!", {id: toastId});
+        }
+    };
+
+    const onRegister = async (firstName, lastName, email, password, roles) => {
+        const toastId = toast.loading("Регистрируем...");
+        try {
+            const response = await request("POST", "register", {firstName, lastName, email, password, roles});
+            const token = response.data.token;
+            Cookies.set("token", token, {expires: 7});
+            login(token);
+            toast.success("Регистрация успешна!", {id: toastId});
+            navigate("/profile");
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Ошибка регистрации!", {id: toastId});
+            logout();
+        }
+    };
+
+    return (
+        <div style={{height: "90vh"}}>
+            {!user ? (
+                <LoginForm onLogin={onLogin} onRegister={onRegister}/>
+            ) : (
+                <UserProfile/>
+            )}
+        </div>
+    );
+};
+
+export default UserContent;

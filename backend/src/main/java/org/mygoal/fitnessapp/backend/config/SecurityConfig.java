@@ -22,21 +22,6 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
 
 /**
  * Configures Spring Security for the application.
@@ -75,6 +60,15 @@ public class SecurityConfig {
                 .addFilterBefore(new JwtAuthFilter(userAuthProvider), BasicAuthenticationFilter.class)
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((requests) -> requests
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/api/login", "/api/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/report/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/athletes/{id}", "/api/coaches/{id}").hasAuthority("ADMIN")
@@ -92,7 +86,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/athletes").hasAnyAuthority("ATHLETE", "COACH", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/athletes/{id}").hasAnyAuthority("ATHLETE", "COACH", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/trainings/{id}").hasAnyAuthority("ATHLETE", "COACH", "ADMIN")
-                        .anyRequest().authenticated());
+                        .anyRequest().authenticated()
+                        );
 
         return http.build();
     }

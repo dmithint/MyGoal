@@ -36,7 +36,7 @@ VALUES ('ADMIN'),
 INSERT INTO public.admins (user_id)
 VALUES (1),
        (2),
-       (3),
+       (3);
 
 INSERT INTO public.coaches (user_id, experience, specialization)
 VALUES

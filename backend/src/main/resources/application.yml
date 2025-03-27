@@ -15,7 +15,7 @@ spring:
     jdbc:
       initialize-schema: always
 
-  doc:
-    swagger-ui:
-      path: /api/swagger-ui
-
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    path: /api/swagger-ui

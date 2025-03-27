@@ -1,0 +1,142 @@
+// CoachTimeSlots.jsx
+import React, { useState } from "react";
+import { request } from "../axios_helper";
+import { Button, Box, Modal, Typography, MenuItem, Select } from "@mui/material";
+import { toast } from "react-hot-toast";
+import dayjs from "dayjs";
+import { getStatusText } from "../util/ui";
+
+function CoachTimeSlots({ timeSlots, setTimeSlots }) {
+    const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const groupedByDate = timeSlots.reduce((acc, slot) => {
+        const date = dayjs(slot.start).format("YYYY-MM-DD");
+        if (!acc[date]) acc[date] = [];
+        acc[date].push(slot);
+        return acc;
+    }, {});
+
+    const handleStatusChange = async (newStatus) => {
+        const toastId = toast.loading("Обновление статуса...");
+        try {
+            await request("PATCH", `trainings/${selectedTimeSlot.id}/status`, {
+                status: newStatus
+            });
+
+            const updatedSlots = timeSlots.map(slot =>
+                slot.id === selectedTimeSlot.id ? {...slot, status: newStatus} : slot
+            );
+            setTimeSlots(updatedSlots);
+            toast.success("Статус обновлен!", { id: toastId });
+        } catch (error) {
+            toast.error("Ошибка обновления", { id: toastId });
+        }
+    };
+
+    const formatTimeRange = (start, end) =>
+        `${dayjs(start).format("HH:mm")} - ${dayjs(end).format("HH:mm")`;
+
+  return (
+    <Box sx={{ width: "100%", p: 2 }}>
+      {Object.entries(groupedByDate).map(([date, slots]) => (
+        <Box key={date} sx={{ mb: 4 }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            {dayjs(date).format("DD.MM.YYYY")}
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
+            {slots.map((slot) => (
+              <Button
+                key={slot.id}
+                variant="outlined"
+                onClick={() => {
+                  setSelectedTimeSlot(slot);
+                  setIsModalOpen(true);
+                }}
+                sx={{
+                  m: 0.5,
+                  padding: '8px 16px',
+                  borderRadius: '10px',
+                  borderColor: getStatusColor(slot.status),
+                  color: getStatusColor(slot.status)
+                }}
+              >
+                {slot.name} ({formatTimeRange(slot.start, slot.end)} - {getStatusText(slot.status)})
+              </Button>
+            ))}
+          </Box>
+        </Box>
+      ))}
+
+      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <Box sx={modalStyle}>
+          {selectedTimeSlot && (
+            <>
+              <Typography variant="h5" sx={{ mb: 3 }}>
+                {selectedTimeSlot.name}
+              </Typography>
+              
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                <strong>Статус:</strong>
+                <Select
+                  value={selectedTimeSlot.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  sx={{ ml: 1, minWidth: 120 }}
+                >
+                  <MenuItem value="SCHEDULED">Запланирована</MenuItem>
+                  <MenuItem value="CONFIRMED">Подтверждена</MenuItem>
+                  <MenuItem value="CANCELLED">Отменена</MenuItem>
+                  <MenuItem value="COMPLETED">Завершена</MenuItem>
+                </Select>
+              </Typography>
+
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                <strong>Участники:</strong>
+                {selectedTimeSlot.athletes.length > 0 ? (
+                  <ul>
+                    {selectedTimeSlot.athletes.map(athlete => (
+                      <li key={athlete.id}>
+                        {athlete.firstName} {athlete.lastName}
+                      </li>
+                    ))}
+                  </ul>
+                ) : "Нет участников"}
+              </Typography>
+
+              <Button 
+                variant="contained" 
+                onClick={() => setIsModalOpen(false)}
+                sx={{ mt: 2 }}
+              >
+                Закрыть
+              </Button>
+            </>
+          )}
+        </Box>
+      </Modal>
+    </Box>
+  );
+}
+
+const modalStyle = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 450,
+  bgcolor: "background.paper",
+  boxShadow: 24,
+  p: 4,
+  borderRadius: "16px"
+};
+
+const getStatusColor = (status) => {
+  switch(status) {
+    case 'CONFIRMED': return 'success.main';
+    case 'CANCELLED': return 'error.main';
+    case 'COMPLETED': return 'grey.600';
+    default: return 'primary.main';
+  }
+};
+
+export default CoachTimeSlots;
