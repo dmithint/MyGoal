@@ -3,156 +3,112 @@ package org.mygoal.fitnessapp.backend.service;
 import org.mygoal.fitnessapp.backend.dto.CredentialsDto;
 import org.mygoal.fitnessapp.backend.dto.SignUpDto;
 import org.mygoal.fitnessapp.backend.dto.UserDto;
-import org.mygoal.fitnessapp.backend.dto.UserParameters;
 import org.mygoal.fitnessapp.backend.exceptions.AppException;
 import org.mygoal.fitnessapp.backend.mappers.UserMapper;
-import org.mygoal.fitnessapp.backend.model.User;
+import org.mygoal.fitnessapp.backend.model.*;
+import org.mygoal.fitnessapp.backend.repository.AthleteRepository;
+import org.mygoal.fitnessapp.backend.repository.CoachRepository;
+import org.mygoal.fitnessapp.backend.repository.RoleRepository;
 import org.mygoal.fitnessapp.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.CharBuffer;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-/**
- * Service for working with users.
- */
 @RequiredArgsConstructor
 @Service
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
-
+    private final CoachRepository coachRepository;
+    private final AthleteRepository athleteRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-
     private final UserMapper userMapper;
 
-    /**
-     * Login user.
-     *
-     * @param credentialsDto credentials data transfer object
-     * @return user data transfer object
-     * @throws AppException if user not found or password is invalid
-     */
     public UserDto login(CredentialsDto credentialsDto) {
-        User user = userRepository.findByLogin(credentialsDto.getLogin())
+        User user = userRepository.findByEmail(credentialsDto.getEmail())
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
-        if (passwordEncoder.matches(CharBuffer.wrap(credentialsDto.getPassword()), user.getPassword())) {
-            return userMapper.toUserDto(user);
+        if (!passwordEncoder.matches(credentialsDto.getPassword(), user.getPassword())) {
+            throw new AppException("Invalid password", HttpStatus.BAD_REQUEST);
         }
-        throw new AppException("Invalid password", HttpStatus.BAD_REQUEST);
+        return userMapper.toUserDto(user);
     }
 
-    /**
-     * Register new user.
-     *
-     * @param userDto user data transfer object
-     * @return user data transfer object
-     * @throws AppException if login already exists
-     */
     public UserDto register(SignUpDto userDto) {
-        Optional<User> optionalUser = userRepository.findByLogin(userDto.getLogin());
-
-        if (optionalUser.isPresent()) {
-            throw new AppException("Login already exists", HttpStatus.BAD_REQUEST);
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new AppException("Email already exists", HttpStatus.BAD_REQUEST);
         }
 
-        User user = userMapper.signUpToUser(userDto);
-        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.getPassword())));
+        User user = signUpToUser(userDto);
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
 
-        User savedUser = userRepository.save(user);
+        if (user instanceof Coach) {
+            coachRepository.save((Coach) user);
+        } else {
+            athleteRepository.save((Athlete) user);
+        }
 
-        return userMapper.toUserDto(savedUser);
-    }
-
-    /**
-     * Find user by login.
-     *
-     * @param login user login
-     * @return user data transfer object
-     * @throws AppException if user not found
-     */
-    public UserDto findByLogin(String login) {
-        User user = userRepository.findByLogin(login)
-                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
         return userMapper.toUserDto(user);
     }
 
-    /**
-     * Get user data transfer object by id.
-     *
-     * @param id user id
-     * @return user data transfer object
-     * @throws AppException if user not found
-     */
+    private User signUpToUser(SignUpDto signUpDto) {
+        User user = createUserByRoles(signUpDto.getRoles());
+        user.setFirstName(signUpDto.getFirstName());
+        user.setLastName(signUpDto.getLastName());
+        user.setEmail(signUpDto.getEmail());
+
+        Set<Role> userRoles = signUpDto.getRoles().stream()
+                .map(roleType -> roleRepository.findByName(roleType)
+                        .orElseThrow(() -> new AppException("Role not found: " + roleType, HttpStatus.BAD_REQUEST)))
+                .collect(Collectors.toSet());
+
+        user.setRoles(userRoles);
+        return user;
+    }
+
+    private User createUserByRoles(Set<RoleType> roles) {
+        if (roles.contains(RoleType.COACH)) {
+            return new Coach();
+        } else {
+            return new Athlete();
+        }
+    }
+
+
+    public UserDto findByEmail(String email) {
+        return userMapper.toUserDto(userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND)));
+    }
+
     public UserDto getUserDtoById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
-        return userMapper.toUserDto(user);
+        return userMapper.toUserDto(getUserById(id));
     }
 
-    /**
-     * Get user by id.
-     *
-     * @param id user id
-     * @return user
-     * @throws AppException if user not found
-     */
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
     }
 
-
-    /**
-     * Change user email.
-     *
-     * @param id    user id
-     * @param email new email
-     * @return user data transfer object
-     * @throws AppException if user not found
-     */
     public UserDto changeUserEmail(Long id, String email) {
-
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
-
+        User user = getUserById(id);
         user.setEmail(email);
-        userRepository.save(user);
-
-        return userMapper.toUserDto(user);
+        return userMapper.toUserDto(userRepository.save(user));
     }
 
-    /**
-     * Change user parameters.
-     *
-     * @param id          user id
-     * @param parameters parameters
-     * @return user data transfer object
-     * @throws AppException if user not found
-     */
-    public UserDto changeUserParams(Long id, UserParameters parameters) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
-
-        user.setHeight(parameters.getHeight());
-        user.setWeight(parameters.getWeight());
-        user.setFat(parameters.getFat());
-        user.setShoulderWidth(parameters.getShoulderWidth());
-        user.setShoulderCircumference(parameters.getShoulderCircumference());
-        user.setChestCircumference(parameters.getChestCircumference());
-        user.setWaistCircumference(parameters.getWaistCircumference());
-        user.setHipCircumference(parameters.getHipCircumference());
-        user.setCalfCircumference(parameters.getCalfCircumference());
-
-        userRepository.save(user);
-
-        return userMapper.toUserDto(user);
-    }
-
-
+//    public UserDto changeUserParams(Long id, UserParametersDto parameters) {
+//        if (!(getUserById(id) instanceof Client client)) {
+//            throw new AppException("User is not a client", HttpStatus.BAD_REQUEST);
+//        }
+//
+//        userMapper.updateClientFromDto(client, parameters);
+//        return userMapper.toUserDto(userRepository.save(client));
+//    }
 }

@@ -1,297 +1,385 @@
 import React, {useEffect, useState} from 'react';
 import '../styles/UserProfile.css';
-import {useAuth} from "./AuthProvider";
-import {request} from "../axios_helper";
+import {baseUrl, request} from "../axios_helper";
+import {useAuth} from "../context/AuthProvider";
+import {toast} from "react-hot-toast";
+import {Box} from "@mui/material";
 
 function UserProfile() {
+    const {user, logout} = useAuth();
+    const [userInfo, setUserInfo] = useState(null);
+    const [isPersonalEditable, setIsPersonalEditable] = useState(false);
+    const [isBodyEditable, setIsBodyEditable] = useState(false);
+    const [updatedUserInfo, setUpdatedUserInfo] = useState(null);
 
-    const {login, logout, isAuthenticated} = useAuth();
-
-    const [userInfo, setUserInfo] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        height: '',
-        weight: '',
-        fat: '',
-        shoulderWidth: '',
-        shoulderCircumference: '',
-        chestCircumference: '',
-        waistCircumference: '',
-        hipCircumference: '',
-        calfCircumference: '',
-    });
-
-    const getUserInfo = (userId) => {
-        request("GET", `profile?id=${userId}`)
-            .then((response) => {
-                setUserInfo(response.data);
-            })
-            .catch((error) => {
-                logout();
-            });
-    };
-
-    const userId = localStorage.getItem('id');
+    const role = user?.roles?.find(role => ["ADMIN", "COACH", "ATHLETE"].includes(role));
 
     useEffect(() => {
-        getUserInfo(userId);
-    }, []);
-
-    const [isEditableEmail, setIsEditableEmail] = useState(false);
-    const [isEditableParams, setIsEditableParams] = useState(false);
+        if (user?.id) {
+            const roleMap = {
+                ADMIN: "admins",
+                COACH: "coaches",
+                ATHLETE: "athletes"
+            };
+            const url = `/${roleMap[role]}/${user.id}`;
+            const toastId = toast.loading("Загрузка профиля...");
+            request("GET", url)
+                .then(response => {
+                    const data = response.data;
+                    if (role === "ATHLETE") {
+                        data.bodyMeasurements = {
+                            height: data.bodyMeasurements?.height || null,
+                            weight: data.bodyMeasurements?.weight || null,
+                            fat: data.bodyMeasurements?.fat || null,
+                            shoulderWidth: data.bodyMeasurements?.shoulderWidth || null,
+                            shoulderCircumference: data.bodyMeasurements?.shoulderCircumference || null,
+                            chestCircumference: data.bodyMeasurements?.chestCircumference || null,
+                            waistCircumference: data.bodyMeasurements?.waistCircumference || null,
+                            hipCircumference: data.bodyMeasurements?.hipCircumference || null,
+                            calfCircumference: data.bodyMeasurements?.calfCircumference || null
+                        };
+                    }
+                    setUserInfo(data);
+                    setUpdatedUserInfo(data);
+                    toast.success("Профиль загружен!", {id: toastId});
+                })
+                .catch(() => {
+                    toast.error("Ошибка загрузки профиля!", {id: toastId});
+                    logout();
+                });
+        }
+    }, [user, logout, role]);
 
     const handleInputChange = (e) => {
         const {name, value} = e.target;
-        setUserInfo({...userInfo, [name]: value});
-    };
-
-    const enableEditingEmail = () => {
-        if (isEditableEmail) {
-            request("POST", `profile/email?id=${userId}&email=${userInfo.email}`)
-                .then((response) => {
-                })
-                .catch((error) => {
-                    logout();
-                });
+        if (name.includes('bodyMeasurements.')) {
+            const field = name.split('.')[1];
+            setUpdatedUserInfo(prev => ({
+                ...prev,
+                bodyMeasurements: {
+                    ...prev.bodyMeasurements,
+                    [field]: value === '' ? null : Number(value)
+                }
+            }));
+        } else {
+            setUpdatedUserInfo(prev => ({
+                ...prev,
+                [name]: value
+            }));
         }
-        setIsEditableEmail(!isEditableEmail);
     };
 
-    const sendEmailParameter = () => {
-        request("POST", `profile/sendParams?id=${userId}`)
-            .then((response) => {
+    const savePersonalData = () => {
+        const toastId = toast.loading("Сохранение данных...");
+        const currentEmail = userInfo.email;
+        const newEmail = updatedUserInfo.email;
+        const emailChanged = newEmail !== currentEmail;
+
+        if (emailChanged) {
+            const confirmed = window.confirm('После изменения email необходимо войти заново. Продолжить?');
+            if (!confirmed) {
+                setUpdatedUserInfo(prev => ({
+                    ...prev,
+                    email: currentEmail
+                }));
+                const personalData = {
+                    firstName: updatedUserInfo.firstName,
+                    lastName: updatedUserInfo.lastName,
+                    email: currentEmail
+                };
+                request("PATCH", `/${role.toLowerCase()}s/${user.id}/personal`, personalData)
+                    .then(() => {
+                        setUserInfo(prev => ({
+                            ...prev,
+                            ...personalData
+                        }));
+                        setIsPersonalEditable(false);
+                        toast.success("Данные сохранены (email не изменен)!", {id: toastId});
+                    })
+                    .catch(() => {
+                        toast.error("Ошибка сохранения!", {id: toastId});
+                        logout();
+                    });
+                return;
+            }
+        }
+
+        const personalData = {
+            firstName: updatedUserInfo.firstName,
+            lastName: updatedUserInfo.lastName,
+            email: updatedUserInfo.email
+        };
+        request("PATCH", `/${role.toLowerCase()}s/${user.id}/personal`, personalData)
+            .then(() => {
+                setUserInfo(updatedUserInfo);
+                setIsPersonalEditable(false);
+                toast.success("Данные сохранены!", {id: toastId});
+                if (emailChanged) {
+                    logout();
+                }
             })
-            .catch((error) => {
+            .catch(() => {
+                toast.error("Ошибка сохранения!", {id: toastId});
                 logout();
             });
     };
 
 
-    const enableEditingParams = () => {
-        if (isEditableParams) {
-            request("POST", `profile/params?id=${userId}`,
-                {
-                    height: userInfo.height,
-                    weight: userInfo.weight,
-                    fat: userInfo.fat,
-                    shoulderWidth: userInfo.shoulderWidth,
-                    shoulderCircumference: userInfo.shoulderCircumference,
-                    chestCircumference: userInfo.chestCircumference,
-                    waistCircumference: userInfo.waistCircumference,
-                    hipCircumference: userInfo.hipCircumference,
-                    calfCircumference: userInfo.calfCircumference
-                }
-            )
-                .then((response) => {
-                })
-                .catch((error) => {
-                    logout();
-                });
-        }
-        setIsEditableParams(!isEditableParams);
+    const saveBodyParams = () => {
+        const toastId = toast.loading("Сохранение параметров...");
+        const bodyMeasurements = {
+            height: updatedUserInfo.bodyMeasurements.height,
+            weight: updatedUserInfo.bodyMeasurements.weight,
+            fat: updatedUserInfo.bodyMeasurements.fat,
+            shoulderWidth: updatedUserInfo.bodyMeasurements.shoulderWidth,
+            shoulderCircumference: updatedUserInfo.bodyMeasurements.shoulderCircumference,
+            chestCircumference: updatedUserInfo.bodyMeasurements.chestCircumference,
+            waistCircumference: updatedUserInfo.bodyMeasurements.waistCircumference,
+            hipCircumference: updatedUserInfo.bodyMeasurements.hipCircumference,
+            calfCircumference: updatedUserInfo.bodyMeasurements.calfCircumference
+        };
+        request("PATCH", `/athletes/${user.id}/params`, bodyMeasurements)
+            .then(() => {
+                setUserInfo(updatedUserInfo);
+                setIsBodyEditable(false);
+                toast.success("Параметры сохранены!", {id: toastId});
+            })
+            .catch(() => {
+                toast.error("Ошибка сохранения!", {id: toastId});
+                logout();
+            });
     };
 
-    return (
-        <div className="user-info">
-            <div className="card-info">
-                <h2>Личный кабинет</h2>
+    const sendMeasurements = () => {
+        const toastId = toast.loading("Отправка данных...");
+        request("POST", `/athletes/${user.id}/send-measurements`)
+            .then(() => {
+                toast.success("Данные отправлены на почту!", {id: toastId});
+            })
+            .catch(() => {
+                toast.error("Ошибка отправки!", {id: toastId});
+            });
+    };
 
-                <div className="form-group">
-                    <label>Имя:</label>
+
+
+    const downloadReport = (url, filename) => {
+        const toastId = toast.loading("Формирование отчета...");
+
+        fetch(baseUrl + url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${user}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Ошибка формирования отчета');
+                return response.blob();
+            })
+            .then(blob => {
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                document.body.removeChild(a);
+                toast.success("Отчет успешно сформирован", { id: toastId });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                toast.error("Ошибка при формировании отчета", { id: toastId });
+            });
+    };
+
+    const cancelEdit = (type) => {
+        setUpdatedUserInfo(userInfo);
+        if (type === 'personal') setIsPersonalEditable(false);
+        else setIsBodyEditable(false);
+    };
+
+    const renderRoleSpecificUI = () => {
+        switch (role) {
+            case "ADMIN":
+                return (
+                    <div className="admin-actions">
+                        <button onClick={() => downloadReport('/report/coaches', 'coaches.csv')}>
+                            Отчет по тренерам
+                        </button>
+                        <button onClick={() => downloadReport('/report/athletes', 'athletes.csv')}>
+                            Отчет по спортсменам
+                        </button>
+                        <button onClick={() => downloadReport('/report/trainings', 'trainings.csv')}>
+                            Отчет по тренировкам
+                        </button>
+                    </div>
+                )
+                ;
+            case "COACH":
+                return (
+                    <div className="coach-stats">
+                        <div className="stats-grid">
+                            <div className="stat-card rating">
+                                <div className="stat-icon">
+                                    <span className="material-icons">star_rate</span>
+                                </div>
+                                <div className="stat-content">
+                                    <h4>Рейтинг</h4>
+                                    <div className="stat-value">
+                                        {userInfo.averageRating || 'Н/Д'}
+                                        <span className="rating-scale">/5</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="stat-card specialization">
+                                <div className="stat-icon">
+                                    <span className="material-icons">workspace_premium</span>
+                                </div>
+                                <div className="stat-content">
+                                    <h4>Специализация</h4>
+                                    <div className="stat-value specialization-text">
+                                        {userInfo.specialization || 'Не указана'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="stat-card experience">
+                                <div className="stat-icon">
+                                    <span className="material-icons">schedule</span>
+                                </div>
+                                <div className="stat-content">
+                                    <h4>Опыт работы</h4>
+                                    <div className="stat-value">
+                                        {(userInfo.experience / 12.0).toFixed(1) || '0'}
+                                        <span className="years">years</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            case "ATHLETE":
+                return (
+                    <div className="body-measurements">
+                        <h3>Параметры тела</h3>
+                        <div className="measurements-grid">
+                            {[
+                                {label: "Рост (см)", name: "height"},
+                                {label: "Вес (кг)", name: "weight"},
+                                {label: "Жир (%)", name: "fat"},
+                                {label: "Ширина плеч (см)", name: "shoulderWidth"},
+                                {label: "Обхват плеча (см)", name: "shoulderCircumference"},
+                                {label: "Обхват груди (см)", name: "chestCircumference"},
+                                {label: "Обхват талии (см)", name: "waistCircumference"},
+                                {label: "Обхват бедра (см)", name: "hipCircumference"},
+                                {label: "Обхват икр (см)", name: "calfCircumference"}
+                            ].map(({label, name}) => (
+                                <div className="form-group" key={name}>
+                                    <label>{label}:</label>
+                                    <input
+                                        type="number"
+                                        name={`bodyMeasurements.${name}`}
+                                        value={updatedUserInfo?.bodyMeasurements?.[name] ?? ''}
+                                        onChange={handleInputChange}
+                                        disabled={!isBodyEditable}
+                                        className="input-field"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+
+                        <div className="button-group">
+                            {!isBodyEditable && (
+                                <button className="button email-button" onClick={sendMeasurements}>
+                                    Отправить на почту
+                                </button>
+                            )}
+
+                            {isBodyEditable ? (
+                                <>
+                                    <button className="button save-button" onClick={saveBodyParams}>Сохранить</button>
+                                    <button className="button cancel-button" onClick={() => cancelEdit('body')}>Отмена
+                                    </button>
+                                </>
+                            ) : (
+                                <button className="button edit-button" onClick={() => setIsBodyEditable(true)}>
+                                    Изменить параметры
+                                </button>
+                            )}
+                        </div>
+
+                    </div>
+                );
+            default:
+                return <p>Неизвестная роль</p>;
+        }
+    };
+
+    if (!userInfo) return <p>Загрузка...</p>;
+
+    return (
+        <div className="user-profile">
+            <h1 className="profile-title">Личный кабинет</h1>
+
+            <Box className="personal-data" sx={{marginBottom: '20px'}}>
+                <h2>
                     <input
                         type="text"
                         name="firstName"
-                        value={userInfo.firstName}
-                        className="input-field"
-                        disabled={true}
+                        value={updatedUserInfo.firstName}
+                        onChange={handleInputChange}
+                        disabled={!isPersonalEditable}
+                        className="input-field name-input"
                     />
-
-                </div>
-
-                <div className="form-group">
-                    <label>Фамилия:</label>
                     <input
                         type="text"
                         name="lastName"
-                        value={userInfo.lastName}
-                        className="input-field"
-                        disabled={true}
+                        value={updatedUserInfo.lastName}
+                        onChange={handleInputChange}
+                        disabled={!isPersonalEditable}
+                        className="input-field name-input"
                     />
-                </div>
-
+                </h2>
                 <div className="form-group">
-                    <label>Логин:</label>
-                    <input
-                        type="text"
-                        name="login"
-                        value={userInfo.login}
-                        className="input-field"
-                        disabled={true}
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Почта:</label>
+                    <label>Email:</label>
                     <input
                         type="email"
                         name="email"
-                        value={userInfo.email}
+                        value={updatedUserInfo.email}
                         onChange={handleInputChange}
+                        disabled={!isPersonalEditable}
                         className="input-field"
-                        disabled={!isEditableEmail}
                     />
                 </div>
 
-                <div className="buttons-row">
-                    <button onClick={logout} className="button">
-                        Выйти из системы
-                    </button>
-
-                    <button onClick={enableEditingEmail} className="button">
-                        Сменить почту
-                    </button>
-                </div>
-
-            </div>
-
-            <div className="card-info">
-                <h3>Параметры тела</h3>
-
-                <div className="body-measurements-row">
-                    <div className="form-group">
-                        <label>Рост:</label>
-                        <input
-                            type="number"
-                            name="height"
-                            value={userInfo.height}
-                            onChange={handleInputChange}
-                            className="input-field"
-                            disabled={!isEditableParams}
-                        />
+                {role != "ADMIN" ? (
+                    <div className="button-group">
+                        {(isPersonalEditable) ? (
+                            <>
+                                <button className="button save-button" onClick={savePersonalData}>Сохранить</button>
+                                <button className="button cancel-button" onClick={() => cancelEdit('personal')}>
+                                    Отмена
+                                </button>
+                            </>
+                        ) : (
+                            <button className="button edit-button" onClick={() => setIsPersonalEditable(true)}>
+                                Изменить данные
+                            </button>
+                        )}
                     </div>
+                ) : <></>
+                }
+            </Box>
 
-                    <div className="form-group">
-                        <label>Вес (кг):</label>
-                        <input
-                            type="number"
-                            name="weight"
-                            value={userInfo.weight}
-                            onChange={handleInputChange}
-                            className="input-field"
-                            disabled={!isEditableParams}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Жир (%):</label>
-                        <input
-                            type="number"
-                            name="fat"
-                            value={userInfo.fat}
-                            onChange={handleInputChange}
-                            className="input-field"
-                            disabled={!isEditableParams}
-                        />
-                    </div>
-                </div>
-
-                <div className="body-measurements-row">
-
-                    <div className="form-group">
-
-                        <label>Ширина плеч:</label>
-                        <input
-                            type="number"
-                            name="shoulderWidth"
-                            value={userInfo.shoulderWidth}
-                            onChange={handleInputChange}
-                            className="input-field"
-                            disabled={!isEditableParams}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Обхват плеча:</label>
-                        <input
-                            type="number"
-                            name="shoulderCircumference"
-                            value={userInfo.shoulderCircumference}
-                            onChange={handleInputChange}
-                            className="input-field"
-                            disabled={!isEditableParams}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Обхват груди:</label>
-                        <input
-                            type="number"
-                            name="chestCircumference"
-                            value={userInfo.chestCircumference}
-                            onChange={handleInputChange}
-                            className="input-field"
-                            disabled={!isEditableParams}
-                        />
-                    </div>
-                </div>
-
-
-                <div className="body-measurements-row">
-                    <div className="form-group">
-                        <label>Обхват талии:</label>
-                        <input
-
-                            type="number"
-                            name="waistCircumference"
-                            value={userInfo.waistCircumference}
-                            onChange={handleInputChange}
-                            className="input-field"
-                            disabled={!isEditableParams}
-                        />
-                    </div>
-
-
-                    <div className="form-group">
-                        <label>Обхват бедра:</label>
-                        <input
-                            type="number"
-                            name="hipCircumference"
-                            value={userInfo.hipCircumference}
-                            onChange={handleInputChange}
-                            className="input-field"
-                            disabled={!isEditableParams}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Обхват икр:</label>
-                        <input
-                            type="number"
-                            name="calfCircumference"
-                            value={userInfo.calfCircumference}
-                            onChange={handleInputChange}
-                            className="input-field"
-                            disabled={!isEditableParams}
-                        />
-                    </div>
-                </div>
-
-                <div className="buttons-row">
-                    <button onClick={enableEditingParams} className="button">
-                        Редактировать параметры тела
-                    </button>
-
-                    <button onClick={sendEmailParameter} className="button">
-                        Отправить показатели на почту
-                    </button>
-                </div>
-            </div>
-
+            {renderRoleSpecificUI()}
 
         </div>
-
-    )
-        ;
+    );
 }
 
 export default UserProfile;

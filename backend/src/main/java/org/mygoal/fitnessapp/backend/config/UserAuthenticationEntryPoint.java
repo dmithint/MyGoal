@@ -1,21 +1,21 @@
 package org.mygoal.fitnessapp.backend.config;
 
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.mygoal.fitnessapp.backend.dto.ErrorDto;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+import org.mygoal.fitnessapp.backend.dto.ErrorDto;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * This class implements the AuthenticationEntryPoint interface and is used to handle authentication exceptions.
- * When an authentication exception occurs, this class is called and it sets the response status to 401 Unauthorized, sets the Content-Type header to application/json, and writes an ErrorDto object to the response body.
+ * Handles unauthorized access attempts by returning a JSON response with an error message.
  */
 @Component
 public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
@@ -23,7 +23,13 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     /**
-     * {@inheritDoc}
+     * Invoked when an unauthenticated user attempts to access a secured resource.
+     *
+     * @param request       the {@link HttpServletRequest} that resulted in an authentication exception
+     * @param response      the {@link HttpServletResponse} to send the error response
+     * @param authException the {@link AuthenticationException} that was thrown
+     * @throws IOException      if an input or output exception occurs
+     * @throws ServletException if a servlet-specific error occurs
      */
     @Override
     public void commence(
@@ -35,4 +41,3 @@ public class UserAuthenticationEntryPoint implements AuthenticationEntryPoint {
         OBJECT_MAPPER.writeValue(response.getOutputStream(), new ErrorDto("Unauthorized path"));
     }
 }
-

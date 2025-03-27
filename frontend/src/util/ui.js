@@ -1,0 +1,7 @@
+export const getStatusText = (status) =>
+    ({
+        completed: "Завершена",
+        in_progress: "Идет сейчас",
+        scheduled: "Запланирована",
+        cancelled: "Отменена",
+    }[status.toLowerCase()] || "Неизвестно");

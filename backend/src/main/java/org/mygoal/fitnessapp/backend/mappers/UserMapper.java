@@ -1,36 +1,56 @@
 package org.mygoal.fitnessapp.backend.mappers;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mygoal.fitnessapp.backend.dto.SignUpDto;
 import org.mygoal.fitnessapp.backend.dto.UserDto;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
+import org.mygoal.fitnessapp.backend.model.Role;
 import org.mygoal.fitnessapp.backend.model.User;
 
 /**
- * Mapper for {@link User} entities and their corresponding DTOs.
+ * Mapper class for converting {@link User} entities to {@link UserDto} objects in the FitnessApp.
  * <p>
- * This mapper is responsible for converting between the {@link User} entity and its DTO representations, {@link UserDto} and {@link SignUpDto}.
+ * This component provides methods to transform domain model objects into data transfer objects,
+ * facilitating the separation of concerns between the persistence layer and API responses.
  */
-@Mapper(componentModel = "spring")
-public interface UserMapper {
+@Component
+public class UserMapper {
 
     /**
      * Converts a {@link User} entity to a {@link UserDto}.
+     * <p>
+     * This method maps the user's properties (ID, first name, last name, email, and roles) to a DTO.
+     * If the input user is null, the method returns null.
      *
-     * @param user The {@link User} entity to convert.
-     * @return The {@link UserDto} representation of the {@link User} entity.
+     * @param user The {@link User} entity to convert, or null.
+     * @return A {@link UserDto} object with the mapped properties, or null if the input is null.
      */
-    UserDto toUserDto(User user);
+    public UserDto toUserDto(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        return UserDto.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .roles(mapRoles(user.getRoles()))
+                .build();
+    }
 
     /**
-     * Converts a {@link SignUpDto} to a {@link User} entity.
+     * Maps a set of {@link Role} entities to a set of role names as strings.
      * <p>
-     * Note: The password field is ignored during the conversion to prevent it from being exposed.
+     * This helper method extracts the name of each role (assumed to be an enum or string representation)
+     * and collects them into a {@link Set} of strings for use in the {@link UserDto}.
      *
-     * @param signUpDto The {@link SignUpDto} to convert.
-     * @return The {@link User} entity representation of the {@link SignUpDto}.
+     * @param roles The set of {@link Role} entities to map.
+     * @return A {@link Set} of role names as strings.
      */
-    @Mapping(target = "password", ignore = true)
-    User signUpToUser(SignUpDto signUpDto);
-
+    private Set<String> mapRoles(Set<Role> roles) {
+        return roles.stream()
+                .map(role -> role.getName().name())
+                .collect(Collectors.toSet());
+    }
 }

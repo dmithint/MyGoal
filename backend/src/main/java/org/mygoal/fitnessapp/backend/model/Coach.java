@@ -1,46 +1,35 @@
 package org.mygoal.fitnessapp.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Entity representing a coach in the fitness application.
- */
+
 @Entity
-@Data
-public class Coach {
+@Table(name = "coaches")
+@PrimaryKeyJoinColumn(name = "user_id")
+@Getter @Setter
+public class Coach extends User {
 
-    /**
-     * The unique identifier of the coach.
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String specialization;
+    private Integer experience;
 
-    /**
-     * The first name of the coach.
-     */
-    private String name;
+    @OneToMany(mappedBy = "coach", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("coach-trainings")
+    private List<Training> trainings = new ArrayList<>();
 
-    /**
-     * The last name of the coach.
-     */
-    private String surname;
 
-    /**
-     * The rating of the coach.
-     */
-    private String rating;
-
-    /**
-     * The list of trainings that the coach is responsible for.
-     */
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "coach_trainings",
-            joinColumns = @JoinColumn(name = "coach_id"),
-            inverseJoinColumns = @JoinColumn(name = "training_id"))
-    private List<Training> trainings;
+    public double getAverageRating() {
+        return trainings.stream()
+                .filter(t -> !t.getFeedbacks().isEmpty())
+                .mapToDouble(Training::getAverageRating)
+                .average()
+                .orElse(0.0);
+    }
 }

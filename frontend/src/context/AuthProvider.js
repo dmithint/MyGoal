@@ -1,0 +1,68 @@
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "react-hot-toast";
+
+const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+    const [token, setAuthToken] = useState(() => Cookies.get("token") || null);
+    const [user, setUser] = useState(undefined);
+
+    const safeDecode = (tokenToDecode) => {
+        try {
+            const decoded = jwtDecode(tokenToDecode);
+            if (decoded.exp * 1000 < Date.now()) {
+                return null;
+            }
+            return decoded;
+        } catch {
+            return null;
+        }
+    };
+
+    useEffect(() => {
+        const savedToken = Cookies.get("token");
+        if (savedToken) {
+            const decodedUser = safeDecode(savedToken);
+            if (decodedUser) {
+                setAuthToken(savedToken);
+                setUser(decodedUser);
+            } else {
+                Cookies.remove("token");
+                setAuthToken(null);
+                setUser(null);
+                toast.error("Время сеанса истекло. Пожалуйста, войдите снова.");
+            }
+        }
+    }, []);
+
+    const login = useCallback((newToken) => {
+        const decodedUser = safeDecode(newToken);
+        if (decodedUser) {
+            Cookies.set("token", newToken, { expires: 1 });
+            setAuthToken(newToken);
+            setUser(decodedUser);
+            toast.success("Вы успешно вошли в систему!");
+        } else {
+            toast.error("Недействительный токен. Вход не выполнен.");
+        }
+    }, []);
+
+    const logout = useCallback(() => {
+        Cookies.remove("token");
+        setAuthToken(null);
+        setUser(null);
+        toast.success("Вы успешно вышли из системы!");
+    }, []);
+
+    return (
+        <AuthContext.Provider value={{ token, user, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+export function useAuth() {
+    return useContext(AuthContext);
+}

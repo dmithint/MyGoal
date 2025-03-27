@@ -1,5 +1,17 @@
-import React, {useState} from 'react';
-import {Button, Tab, Tabs, TextField, Box, Paper} from '@mui/material';
+import React, {useState} from "react";
+import {
+    Box,
+    Button,
+    Paper,
+    Tab,
+    Tabs,
+    TextField,
+    Radio,
+    RadioGroup,
+    FormControlLabel,
+    FormControl,
+    FormLabel
+} from "@mui/material";
 import PropTypes from "prop-types";
 
 const LoginForm = ({onLogin, onRegister}) => {
@@ -7,8 +19,9 @@ const LoginForm = ({onLogin, onRegister}) => {
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
-        login: "",
+        email: "",
         password: "",
+        role: "ATHLETE",
     });
 
     const onChangeHandler = (event) => {
@@ -21,113 +34,61 @@ const LoginForm = ({onLogin, onRegister}) => {
 
     const onSubmitLogin = (e) => {
         e.preventDefault();
-        onLogin(formData.login, formData.password);
+        onLogin(formData.email, formData.password);
     };
 
     const onSubmitRegister = (e) => {
         e.preventDefault();
-        onRegister(formData.firstName, formData.lastName, formData.login, formData.password);
-    };
-
-    const handleTabChange = (event, newValue) => {
-        setActiveTab(newValue);
+        onRegister(
+            formData.firstName,
+            formData.lastName,
+            formData.email,
+            formData.password,
+            [formData.role]
+        );
     };
 
     return (
         <Box display="flex" justifyContent="center" mt={"3%"}>
-            <Paper elevation={3} style={{padding: '20px', width: '400px'}}>
-                <Tabs value={activeTab} onChange={handleTabChange} centered>
+            <Paper elevation={3} style={{padding: "20px", width: "400px"}}>
+                <Tabs value={activeTab} onChange={(event, newValue) => setActiveTab(newValue)} centered>
                     <Tab label="Авторизация"/>
                     <Tab label="Регистрация"/>
                 </Tabs>
 
-                <div hidden={activeTab !== 0}>
+                {activeTab === 0 && (
                     <form onSubmit={onSubmitLogin}>
-                        <Box mt={2}>
-                            <TextField
-                                label="Логин"
-                                name="login"
-                                fullWidth
-                                margin="normal"
-                                variant="outlined"
-                                onChange={onChangeHandler}
-                                value={formData.login}
-                            />
-                        </Box>
-                        <Box mt={2}>
-                            <TextField
-                                label="Пароль"
-                                name="password"
-                                type="password"
-                                fullWidth
-                                margin="normal"
-                                variant="outlined"
-                                onChange={onChangeHandler}
-                                value={formData.password}
-                            />
-                        </Box>
-                        <Box mt={2}>
-                            <Button type="submit" variant="contained" color="primary" fullWidth>
-                                Войти
-                            </Button>
-                        </Box>
+                        <TextField label="Email" name="email" fullWidth margin="normal" variant="outlined"
+                                   onChange={onChangeHandler} value={formData.email}/>
+                        <TextField label="Пароль" name="password" type="password" fullWidth margin="normal"
+                                   variant="outlined" onChange={onChangeHandler} value={formData.password}/>
+                        <Button type="submit" variant="contained" color="primary" fullWidth>Войти</Button>
                     </form>
-                </div>
+                )}
 
-                <div hidden={activeTab !== 1}>
+                {activeTab === 1 && (
                     <form onSubmit={onSubmitRegister}>
-                        <Box mt={0}>
-                            <TextField
-                                label="Имя"
-                                name="firstName"
-                                fullWidth
-                                margin="normal"
-                                variant="outlined"
-                                onChange={onChangeHandler}
-                                value={formData.firstName}
-                            />
-                        </Box>
-                        <Box mt={0}>
-                            <TextField
-                                label="Фамилия"
-                                name="lastName"
-                                fullWidth
-                                margin="normal"
-                                variant="outlined"
-                                onChange={onChangeHandler}
-                                value={formData.lastName}
-                            />
-                        </Box>
-                        <Box mt={0}>
-                            <TextField
-                                label="Логин"
-                                name="login"
-                                fullWidth
-                                margin="normal"
-                                variant="outlined"
-                                onChange={onChangeHandler}
-                                value={formData.login}
-                            />
-                        </Box>
-                        <Box mt={0}>
-                            <TextField
-                                label="Пароль"
-                                name="password"
-                                type="password"
-                                fullWidth
-                                margin="normal"
-                                variant="outlined"
-                                onChange={onChangeHandler}
-                                value={formData.password}
-                            />
-                        </Box>
-                        <Box mt={2}>
-                            <Button type="submit" variant="contained" color="primary" fullWidth>
-                                Заригистрироваться
-                            </Button>
-                        </Box>
+                        <TextField label="Имя" name="firstName" fullWidth margin="normal" variant="outlined"
+                                   onChange={onChangeHandler} value={formData.firstName}/>
+                        <TextField label="Фамилия" name="lastName" fullWidth margin="normal" variant="outlined"
+                                   onChange={onChangeHandler} value={formData.lastName}/>
+                        <TextField label="Email" name="email" fullWidth margin="normal" variant="outlined"
+                                   onChange={onChangeHandler} value={formData.email}/>
+                        <TextField label="Пароль" name="password" type="password" fullWidth margin="normal"
+                                   variant="outlined" onChange={onChangeHandler} value={formData.password}/>
+
+                        <FormControl component="fieldset" style={{marginTop: "16px"}}>
+                            <FormLabel component="legend">Выберите роль</FormLabel>
+                            <RadioGroup row name="role" value={formData.role} onChange={onChangeHandler}>
+                                <FormControlLabel value="ATHLETE" control={<Radio/>} label="Спортсмен"/>
+                                <FormControlLabel value="COACH" control={<Radio/>} label="Тренер"/>
+                            </RadioGroup>
+                        </FormControl>
+
+                        <Button type="submit" variant="contained" color="primary" fullWidth
+                                style={{marginTop: "16px"}}>Зарегистрироваться</Button>
                     </form>
-                </div>
+                )}
             </Paper>
         </Box>
     );

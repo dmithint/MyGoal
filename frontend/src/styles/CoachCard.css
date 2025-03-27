@@ -1,0 +1,34 @@
+.coach-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px;
+    text-align: center;
+    height: 50%;
+}
+
+.coach-photo {
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    object-fit: contain;
+}
+
+.coach-info {
+    margin-top: 8px;
+}
+
+.coach-name {
+    font-size: 1.2em;
+}
+
+.coach-rating {
+    font-size: 1em;
+    color: #777;
+}
+
+.coach-page {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}

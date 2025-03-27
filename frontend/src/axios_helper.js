@@ -1,30 +1,38 @@
-import axios from 'axios';
-
-export const getAuthToken = () => {
-    return window.localStorage.getItem('token');
-};
-
-export const setAuthHeader = (token) => {
-    if (token !== null) {
-        window.localStorage.setItem("token", token);
-    } else {
-        window.localStorage.removeItem("token");
-    }
-}
+import axios from "axios";
+import Cookies from "js-cookie";
 
 axios.defaults.baseURL = process.env.REACT_APP_API_URL;
-axios.defaults.headers.post['Content-Type'] = 'application/json';
+export const baseUrl = process.env.REACT_APP_API_URL;
+axios.defaults.headers.post["Content-Type"] = "application/json";
+
+const getAuthToken = () => Cookies.get("token");
+
+export const setAuthHeader = (token) => {
+    if (token) {
+        Cookies.set("token", token, { expires: 7 });
+    } else {
+        Cookies.remove("token");
+    }
+};
+
+axios.interceptors.request.use((config) => {
+    const token = getAuthToken();
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
 
 export const request = (method, url, data) => {
-    let headers = {};
-    if (getAuthToken() !== null && getAuthToken() !== "null") {
-        headers = {'Authorization': `Bearer ${getAuthToken()}`};
-    }
-
     return axios({
-        method: method,
-        headers: headers,
-        url: url,
-        data: data
+        method,
+        url,
+        data,
+        withCredentials: true,
+        headers: {
+            "Content-Type": "application/json",
+        },
     });
 };

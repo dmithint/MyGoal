@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 secrets.properties
+application-dev.yml
 
 ### STS ###
 .apt_generated

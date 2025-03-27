@@ -1,211 +1,151 @@
-.logo img {
-    width: 50px;
-    height: auto;
-}
-
-header a,
-header a:hover,
-header a:active,
-header a:visited {
-    cursor: pointer;
-    text-decoration: none;
-    color: white;
-}
-
-header {
-    z-index: 2;
+.app-header {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    max-width: 100%;
     justify-content: space-between;
-    background-color: darkslategrey;
-    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.3);
-    color: #fff;
-    height: 7em;
-    padding: 1em;
+    align-items: center;
+    padding: 1rem 5%;
+    background: linear-gradient(135deg, darkslategray, #2c3e50);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
+    z-index: 1000;
 }
 
-button i {
-    color: #fff;
-    cursor: pointer;
-}
-
-.pc-menu ul {
+.brand-container {
     display: flex;
-    justify-content: space-evenly;
-    flex-direction: row;
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-}
-
-.pc-menu li {
-    margin: 10px;
-    overflow: hidden;
-}
-
-.icon {
-    display: flex;
-    justify-content: center;
     align-items: center;
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-}
-.nav-item * {
-    width: 100%;
-}
-.nav-item ion-icon {
-    font-size: 1.5em;
+    gap: 1rem;
 }
 
-.nav-item:hover * {
-    color: var(--hover);
-    transition: 0.2s;
+.brand-logo {
+    height: 50px;
+    filter: invert(1);
 }
 
-li a {
+.brand-text {
     color: white;
-    font-size: 17px;
-    border-radius: 3px;
-    text-transform: uppercase;
-    text-decoration: none;
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.mobile-menu {
-    position: fixed;
-    box-shadow: 0px -4px 4px rgba(0, 0, 0, 0.1);
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 3em;
-    width: auto;
-    background: #fff;
-    align-items: center;
-    z-index: 900;
-}
-
-.mobile-menu ul {
+.nav-menu {
     display: flex;
-    justify-content: space-around;
-    align-items: center;
+    gap: 2rem;
+    margin-left: 2rem;
 }
 
-.mobile-menu ul li {
-    position: relative;
-    list-style: none;
-    width: 5em;
-    z-index: 1;
+.user-email {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    margin-right: 1.5rem;
+    padding: 0.3rem 0.8rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
 }
 
-.mobile-menu ul li a {
-    position: relative;
+.nav-menu {
     display: flex;
-    text-decoration: none;
-    justify-content: center;
-    justify-content: space-around;
     align-items: center;
-    flex-direction: column;
-    width: 100%;
+    gap: 1.5rem;
 }
 
-.mobile-menu ul li a .icon {
-    position: relative;
-    display: block;
-    line-height: 15px;
-    font-size: 1.5em;
-    text-align: center;
-    padding-top: 15%;
-    transition: 0.5s;
-    color: var(--not-active);
-}
+@media (max-width: 768px) {
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
 
-.mobile-menu ul li.active a .icon {
-    transform: translateY(-0.4em);
-}
-
-.mobile-menu ul li a .text {
-    position: absolute;
-    color: var(--active);
-    font-weight: 400;
-    font-size: 0.75em;
-    letter-spacing: 0.05em;
-    transition: 0.5s;
-    opacity: 0;
-    transform: translateY(1.5em);
-}
-
-.mobile-menu ul li.active .icon {
-    color: var(--active);
-}
-
-.mobile-menu ul li.active a .text {
-    opacity: 1;
-    color: var(--active);
-    transform: translateY(1.3em);
-}
-
-.mobile-menu {
-    display: none;
-}
-
-.mobile-menu .cart {
-    position: relative;
-    display: block;
-}
-
-.mobile-menu .badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 18px;
-    background-color: red;
-    color: white;
-    border-radius: 50%;
-    text-align: center;
-    font-size: 10px;
-}
-
-@media (max-width: 950px) {
-    .pc-menu {
+    .user-email {
         display: none;
     }
-    .mobile-menu {
-        display: block;
-    }
 
-    header .search-box {
-        flex: 1;
-        padding-left: 3em;
-        padding-right: 0em;
-        position: relative;
-    }
-
-    .search-box button {
-        margin-right: 0em;
-    }
-
-    header {
-        position: static;
+    .auth-section {
+        margin-top: 1rem;
     }
 }
 
-.cart {
-    position: relative;
-    display: block;
+.nav-item {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 20px;
-    background-color: red;
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-item.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-weight: 500;
+}
+
+.auth-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.user-greeting {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+}
+
+.auth-button {
+    padding: 0.6rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.auth-button.login {
+    background: #27ae60;
     color: white;
-    border-radius: 50%;
-    text-align: center;
-    font-size: 12px;
+}
+
+.auth-button.logout {
+    background: #e74c3c;
+    color: white;
+}
+
+.auth-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+    .app-header {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+        margin-left: 0;
+    }
+
+    .auth-section {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .brand-text {
+        font-size: 1.4rem;
+    }
 }

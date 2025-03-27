@@ -1,92 +1,59 @@
 package org.mygoal.fitnessapp.backend.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+
 /**
- * Data transfer object for User entity.
+ * Data Transfer Object (DTO) representing a user in the FitnessApp.
+ * <p>
+ * This class encapsulates user details including personal information, email, roles,
+ * and an authentication token (if applicable).
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Schema(description = "DTO representing a user, including personal details, roles, and authentication token")
 public class UserDto {
 
     /**
-     * User's ID.
+     * The unique identifier of the user.
      */
+    @Schema(description = "Unique identifier of the user", example = "1")
     private Long id;
 
     /**
-     * User's first name.
+     * The first name of the user.
      */
+    @Schema(description = "First name of the user", example = "John")
     private String firstName;
 
     /**
-     * User's last name.
+     * The last name of the user.
      */
+    @Schema(description = "Last name of the user", example = "Doe")
     private String lastName;
 
     /**
-     * User's login.
+     * The email address of the user.
      */
-    private String login;
-
-    /**
-     * User's email.
-     */
+    @Schema(description = "Email address of the user", example = "john.doe@example.com")
     private String email;
 
     /**
-     * User's height in centimeters.
+     * The set of roles assigned to the user (e.g., ATHLETE, COACH, ADMIN).
      */
-    private Double height;
+    @Schema(description = "Set of roles assigned to the user", example = "[\"ATHLETE\", \"COACH\"]")
+    private Set<String> roles;
 
     /**
-     * User's weight in kilograms.
+     * The authentication token for the user (optional, included after login).
      */
-    private Double weight;
-
-    /**
-     * User's body fat percentage.
-     */
-    private Double fat;
-
-    /**
-     * User's shoulder width in centimeters.
-     */
-    private Double shoulderWidth;
-
-    /**
-     * User's shoulder circumference in centimeters.
-     */
-    private Double shoulderCircumference;
-
-    /**
-     * User's chest circumference in centimeters.
-     */
-    private Double chestCircumference;
-
-    /**
-     * User's waist circumference in centimeters.
-     */
-    private Double waistCircumference;
-
-    /**
-     * User's hip circumference in centimeters.
-     */
-    private Double hipCircumference;
-
-    /**
-     * User's calf circumference in centimeters.
-     */
-    private Double calfCircumference;
-
-    /**
-     * User's JWT token.
-     */
+    @Schema(description = "Authentication token for the user (optional)", example = "eyJhbGciOiJIUzI1NiJ9...")
     private String token;
-
 }

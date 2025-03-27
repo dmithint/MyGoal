@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:1234/mygoal
+    username: postgres
+    password: password
+
+  session:
+    jdbc:
+      initialize-schema: always
+
+  mail:
+    protocol: smtps
+    host: smtp.yandex.ru
+    port: 465
+    username: mygoal-fitness@ya.ru
+    password: ievgilxmxywvqgqm
+    properties:
+      properties:
+        mail.smtp.auth: true
+        mail.smtp.starttls.enable: true
+
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG               # Логирование SQL-запросов Hibernate
+        type: TRACE              # Логирование всех операций Hibernate (кеширование, метаданные, события и т.д.)
+    org.springframework:
+      web: DEBUG                 # Логирование веб-запросов Spring (например, HTTP запросы и ответы)
+      jdbc: TRACE                # Логирование JDBC операций Spring (используется для работы с базой данных)
+      security: DEBUG            # Логирование Spring Security (основные события, такие как аутентификация, авторизация и т.д.)
+    org.springframework.security:
+      web: DEBUG                 # Логирование веб-запросов, связанных с безопасностью (фильтры, CSRF, CORS и т.д.)
+      access: TRACE              # Логирование доступа (например, проверка прав доступа)
+      authentication: TRACE     # Логирование процессов аутентификации (например, успешная/неуспешная аутентификация)
+    com.zaxxer.hikari: TRACE     # Логирование работы с пулом соединений HikariCP (если используется)
+    org.springframework.transaction: TRACE  # Логирование транзакций Spring
+
+
+security:
+  jwt:
+    token:
+      secret-key: "SECRET_KEY"

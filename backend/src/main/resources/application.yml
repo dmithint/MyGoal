@@ -1,0 +1,21 @@
+spring:
+  profiles:
+    active: prod
+  application:
+    name: backend
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
+
+  session:
+    jdbc:
+      initialize-schema: always
+
+  doc:
+    swagger-ui:
+      path: /api/swagger-ui
+
