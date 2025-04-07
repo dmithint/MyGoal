@@ -23,6 +23,7 @@ services:
       SPRING_MAIL_USERNAME: ${EMAIL}
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
       SECURITY_JWT_TOKEN_SECRET_KEY: ${JWT_SECRET_KEY}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
     depends_on:
       postgresql-db:
         condition: service_healthy
