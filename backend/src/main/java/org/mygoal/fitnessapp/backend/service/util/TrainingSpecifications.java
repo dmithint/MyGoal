@@ -17,6 +17,7 @@ public class TrainingSpecifications {
     public static Specification<Training> filter(Long athleteId, Long coachId, LocalDateTime dateTime) {
         return (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
+            query.distinct(true);
 
             if (athleteId != null) {
                 Join<Training, Athlete> athletesJoin = root.join("athletes");

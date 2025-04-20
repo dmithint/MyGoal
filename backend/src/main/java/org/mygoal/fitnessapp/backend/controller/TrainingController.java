@@ -88,9 +88,9 @@ public class TrainingController {
     @GetMapping("/search")
     public ResponseEntity<List<TrainingDto>> searchTrainings(
             @Parameter(description = "Filter by athlete ID (optional)") @RequestParam(required = false) Long athleteId,
-            @Parameter(description = "Filter by coach ID (optional)") @RequestParam(required = false) Long couchId,
+            @Parameter(description = "Filter by coach ID (optional)") @RequestParam(required = false) Long coachId,
             @Parameter(description = "Filter by training date (optional)") @RequestParam(required = false) LocalDateTime date) {
-        return ResponseEntity.ok(trainingService.getTrainingsWithFilter(athleteId, couchId, date));
+        return ResponseEntity.ok(trainingService.getTrainingsWithFilter(athleteId, coachId, date));
     }
 
     @Operation(summary = "Enroll an athlete in a training session", description = "Adds an athlete to a specified training session.")
