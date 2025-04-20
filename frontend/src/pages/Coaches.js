@@ -7,7 +7,7 @@ import CoachCard from '../components/CoachCard';
 function Coaches() {
     const [coaches, setCoaches] = useState([]);
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const {user} = useAuth();
 
     useEffect(() => {
         if (user === undefined) return;
@@ -25,18 +25,24 @@ function Coaches() {
     }, [user, navigate]);
 
     return (
-        <div className="coach-page" style={{ padding: '20px', minHeight: '90vh' }}>
-            {coaches.map((coach) => (
-                <CoachCard
-                    key={coach.id}
-                    id={coach.id}
-                    firstName={coach.firstName}
-                    lastName={coach.lastName}
-                    rating={coach.averageRating}
-                />
-            ))}
-        </div>
-    );
-}
+        <div className="coach-page" style={{padding: '20px', height: '90vh', overflowY: 'auto'}}>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '20px',
+                }}>
+                    {coaches.map((coach) => (
+                        <CoachCard
+                            key={coach.id}
+                            id={coach.id}
+                            firstName={coach.firstName}
+                            lastName={coach.lastName}
+                            rating={coach.averageRating}
+                        />
+                    ))}
+                </div>
+            </div>
+            );
+            }
 
-export default Coaches;
+            export default Coaches;

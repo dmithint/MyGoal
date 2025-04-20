@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { request } from "../axios_helper";
-import { Button, Box } from "@mui/material";
+import {Button, Box, Typography} from "@mui/material";
 import { toast } from "react-hot-toast";
 import dayjs from "dayjs";
 import TimeSlotList from './TimeSlotList';
@@ -131,6 +131,14 @@ export default function CoachTimeSlots({ coachId, timeSlots, setTimeSlots, selec
             >
                 Создать тренировку
             </Button>
+
+            {timeSlots.length === 0 && (
+                <Box sx={{ width: "100%", p: 4, textAlign: 'center' }}>
+                    <Typography variant="h6" color="text.secondary">
+                        Нет тренировок в этот день
+                    </Typography>
+                </Box>
+            )}
 
             <TimeSlotList
                 timeSlots={timeSlots}

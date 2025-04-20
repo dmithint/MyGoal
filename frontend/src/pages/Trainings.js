@@ -87,12 +87,7 @@ const Trainings = () => {
                     <Box sx={{display: "flex", flexDirection: "column", alignItems: "center", width: "50%"}}>
                         <Box sx={{height: "5%"}}/>
                         { user.roles.includes("ATHLETE") ? <h1>Выберите доступный слот</h1> : <></> }
-                        <Box sx={{height: "3%"}}/>
-                        {timeSlots.length > 0 ? (
-                            <TimeSlots timeSlots={timeSlots} setTimeSlots={setTimeSlots} selectedDate={selectedDate}/>
-                        ) : (
-                            <p>Нет доступных слотов</p>
-                        )}
+                        <TimeSlots timeSlots={timeSlots} setTimeSlots={setTimeSlots} selectedDate={selectedDate}/>
                     </Box>
                 </Box>
             </LocalizationProvider>

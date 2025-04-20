@@ -22,3 +22,6 @@ security:
   jwt:
     token:
       secret-key: ${SECURITY_JWT_TOKEN_SECRET_KEY}
+
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS}

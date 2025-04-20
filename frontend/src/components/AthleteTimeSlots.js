@@ -71,6 +71,19 @@ export default function AthleteTimeSlots({ timeSlots, setTimeSlots }) {
     const formatTimeRange = (start, end) =>
         `${dayjs(start).format("HH:mm")} - ${dayjs(end).format("HH:mm")}`;
 
+
+
+    if (filteredTimeSlots.length === 0) {
+        return (
+            <Box sx={{ width: "100%", p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary">
+                    Нет доступных тренировок
+                </Typography>
+            </Box>
+        );
+    }
+
+
     return (
         <Box sx={{ width: "100%", p: 2 }}>
             {Object.entries(groupedByCoach).map(([coach, slots]) => {
